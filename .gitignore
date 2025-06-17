@@ -407,3 +407,10 @@ package-lock.json
 *.db
 *.db-shm
 *.db-wal
+
+# Audio files (generated content)
+*.mp3
+*.wav
+*.m4a
+*.ogg
+backend/wwwroot/audio/

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw } from 'lucide-react';
+import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw, Copy } from 'lucide-react';
 import { 
   LLMProvider, 
   VoiceOption, 
@@ -29,6 +29,7 @@ function App() {
   const [currentPodcast, setCurrentPodcast] = useState<PodcastSession | null>(null);
   const [recentPodcasts, setRecentPodcasts] = useState<PodcastSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedFromPodcast, setCopiedFromPodcast] = useState<string | null>(null);
 
   useEffect(() => {
     loadInitialData();
@@ -160,6 +161,46 @@ function App() {
     }
   };
 
+  const clearForm = () => {
+    setTopic('');
+    setParticipants([]);
+    setCopiedFromPodcast(null);
+  };
+
+  const copySettingsFromPodcast = async (podcastId: number) => {
+    try {
+      const response = await podcastService.getById(podcastId);
+      const sourcePodcast = response.data;
+      
+      // Convert participants from the source podcast to the form format
+      const copiedParticipants: ParticipantForm[] = sourcePodcast.participants.map(p => {
+        // Find the matching provider by name since the response includes provider name, not ID
+        const matchingProvider = providers.find(provider => provider.name === p.llmProviderName);
+        
+        return {
+          name: p.name,
+          persona: p.persona,
+          llmProviderId: matchingProvider?.id || providers[0]?.id || 1,
+          voiceName: p.voiceName,
+          isHost: p.isHost
+        };
+      });
+      
+      setParticipants(copiedParticipants);
+      setCopiedFromPodcast(sourcePodcast.topic);
+      
+      // Clear any existing topic to encourage user to enter a new one
+      setTopic('');
+      
+      // Show a notification
+      setTimeout(() => setCopiedFromPodcast(null), 3000);
+      
+    } catch (error) {
+      console.error('Failed to copy podcast settings:', error);
+      alert('Failed to copy podcast settings. Please try again.');
+    }
+  };
+
   const getStatusColor = (status: PodcastStatus) => {
     switch (status) {
       case PodcastStatus.Created: return 'bg-gray-100 text-gray-800';
@@ -219,6 +260,20 @@ function App() {
           <div className="space-y-6 lg:col-span-2">
             {!currentPodcast ? (
               <>
+                {/* Copied Settings Notification */}
+                {copiedFromPodcast && (
+                  <div className="bg-green-50 border-l-4 border-l-green-500 card">
+                    <div className="flex items-center gap-2 text-green-800">
+                      <Copy className="w-4 h-4" />
+                      <span className="font-medium">Settings copied from:</span>
+                      <span className="text-green-600">"{copiedFromPodcast}"</span>
+                    </div>
+                    <p className="mt-1 text-green-700 text-sm">
+                      All participant settings have been copied. Enter a new topic to create your podcast.
+                    </p>
+                  </div>
+                )}
+
                 {/* Topic Input */}
                 <div className="card">
                   <div className="card-header">
@@ -244,15 +299,27 @@ function App() {
                         <Users className="w-5 h-5" />
                         Participants ({participants.length})
                       </h2>
-                      {participants.length < 4 && (
-                        <button
-                          onClick={addParticipant}
-                          className="flex items-center gap-2 btn-secondary"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Participant
-                        </button>
-                      )}
+                      <div className="flex gap-2">
+                        {(participants.length > 0 || copiedFromPodcast) && (
+                          <button
+                            onClick={clearForm}
+                            className="flex items-center gap-2 hover:bg-red-50 px-3 py-1 rounded text-gray-600 hover:text-red-600 text-sm transition-colors"
+                            title="Clear all participants and topic"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Clear Form
+                          </button>
+                        )}
+                        {participants.length < 4 && (
+                          <button
+                            onClick={addParticipant}
+                            className="flex items-center gap-2 btn-secondary"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add Participant
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -376,12 +443,20 @@ function App() {
               </>
             ) : (
               <div>
-                <div className="mb-4">
+                <div className="flex justify-between items-center mb-4">
                   <button
                     onClick={() => setCurrentPodcast(null)}
                     className="btn-secondary"
                   >
                     ← Back to Create New
+                  </button>
+                  <button
+                    onClick={() => copySettingsFromPodcast(currentPodcast.id)}
+                    className="flex items-center gap-2 btn-secondary"
+                    title="Copy these settings to create a new podcast"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy Settings
                   </button>
                 </div>
                 <PodcastPlayer session={currentPodcast} />
@@ -399,17 +474,36 @@ function App() {
                 {recentPodcasts.slice(0, 5).map((podcast) => (
                   <div
                     key={podcast.id}
-                    className="hover:bg-gray-50 p-3 border border-gray-200 rounded-lg cursor-pointer"
-                    onClick={() => loadPodcast(podcast.id)}
+                    className="p-3 border border-gray-200 rounded-lg"
                   >
-                    <h4 className="font-medium text-sm truncate">{podcast.topic}</h4>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(podcast.status)}`}>
-                        {getStatusText(podcast.status)}
-                      </span>
-                      <span className="text-gray-500 text-xs">
-                        {new Date(podcast.createdAt).toLocaleDateString()}
-                      </span>
+                    <div 
+                      className="hover:bg-gray-50 rounded cursor-pointer"
+                      onClick={() => loadPodcast(podcast.id)}
+                    >
+                      <h4 className="font-medium text-sm truncate">{podcast.topic}</h4>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(podcast.status)}`}>
+                          {getStatusText(podcast.status)}
+                        </span>
+                        <span className="text-gray-500 text-xs">
+                          {new Date(podcast.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Copy Settings Button */}
+                    <div className="flex justify-end mt-2 pt-2 border-gray-100 border-t">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copySettingsFromPodcast(podcast.id);
+                        }}
+                        className="flex items-center gap-1 hover:bg-primary-50 px-2 py-1 rounded text-gray-600 hover:text-primary-600 text-xs transition-colors"
+                        title="Copy participant settings to create a new podcast"
+                      >
+                        <Copy className="w-3 h-3" />
+                        Copy Settings
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -434,6 +528,9 @@ function App() {
                 </div>
                 <div>
                   <strong>Host:</strong> The host introduces the topic and guides the conversation.
+                </div>
+                <div>
+                  <strong>Copy Settings:</strong> Use "Copy Settings" from recent podcasts to reuse participant configurations.
                 </div>
                 <div>
                   <strong>Voices:</strong> Configure Azure Speech Service in settings for text-to-speech.
