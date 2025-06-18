@@ -60,6 +60,8 @@ public class PodcastSession
     [Required]
     public string Topic { get; set; } = string.Empty;
     
+    public int Rounds { get; set; } = 3;
+    
     public List<Participant> Participants { get; set; } = new();
     
     public List<PodcastMessage> Messages { get; set; } = new();

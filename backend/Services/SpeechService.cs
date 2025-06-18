@@ -1,5 +1,4 @@
 using Microsoft.CognitiveServices.Speech;
-using Microsoft.CognitiveServices.Speech.Audio;
 using LLMPodcastAPI.Models;
 
 namespace LLMPodcastAPI.Services;

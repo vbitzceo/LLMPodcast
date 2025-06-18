@@ -8,6 +8,7 @@ A full-stack application that creates AI-powered podcast conversations using mul
 - **Text-to-Speech**: Azure Speech Services integration with voice selection
 - **Interactive UI**: Modern React frontend with TypeScript and Tailwind CSS
 - **Conversation Management**: Create, save, and replay podcast conversations
+- **Configurable Rounds**: Set 1-10 conversation rounds to control podcast length
 - **Copy Settings**: Reuse participant configurations from previous podcasts
 - **Export Options**: Download conversation transcripts
 - **Cross-Platform**: Runs on Mac and Windows
@@ -102,14 +103,17 @@ A full-stack application that creates AI-powered podcast conversations using mul
 ### Creating a Podcast
 
 1. **Enter a Topic**: Describe what you want the podcast to discuss
-2. **Configure Participants**: 
+2. **Set Rounds**: Choose 1-10 conversation rounds (defaults to 3)
+   - Each round includes all participants speaking once
+   - More rounds = longer, more detailed podcast discussions
+3. **Configure Participants**: 
    - Add up to 4 participants (including host)
    - Set unique names and personas for each
    - Assign LLM providers to each participant
    - Select voices for text-to-speech (optional)
    - Designate one participant as the host
-3. **Generate**: Click "Generate Podcast" to create the conversation
-4. **Listen/Read**: Use the player to listen to audio or read the transcript
+4. **Generate**: Click "Generate Podcast" to create the conversation
+5. **Listen/Read**: Use the player to listen to audio or read the transcript
 
 ### Copy Settings Feature
 
@@ -117,7 +121,7 @@ Save time by reusing successful participant configurations:
 
 1. **From Recent Podcasts**: 
    - In the sidebar, click "Copy Settings" on any previous podcast
-   - All participant details (names, personas, LLM providers, voices) are copied
+   - All participant details (names, personas, LLM providers, voices) and rounds are copied
    - Enter a new topic and generate your podcast
 
 2. **From Current Podcast**: 

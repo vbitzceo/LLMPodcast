@@ -35,7 +35,8 @@ public class PodcastService : IPodcastService
     {
         var session = new PodcastSession
         {
-            Topic = request.Topic
+            Topic = request.Topic,
+            Rounds = request.Rounds
         };
 
         _context.PodcastSessions.Add(session);
@@ -125,7 +126,7 @@ public class PodcastService : IPodcastService
             var conversationHistory = new List<string> { introResponse };
             var messageOrder = 2;
 
-            for (int round = 0; round < 3; round++) // 3 rounds of conversation
+            for (int round = 0; round < session.Rounds; round++) // User-defined number of rounds
             {
                 foreach (var participant in participants)
                 {

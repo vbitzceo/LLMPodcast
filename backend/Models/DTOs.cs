@@ -4,6 +4,7 @@ public class CreatePodcastRequest
 {
     public string Topic { get; set; } = string.Empty;
     public List<ParticipantRequest> Participants { get; set; } = new();
+    public int Rounds { get; set; } = 3;
 }
 
 public class ParticipantRequest
@@ -39,6 +40,7 @@ public class PodcastResponse
 {
     public int Id { get; set; }
     public string Topic { get; set; } = string.Empty;
+    public int Rounds { get; set; } = 3;
     public List<ParticipantResponse> Participants { get; set; } = new();
     public List<MessageResponse> Messages { get; set; } = new();
     public DateTime CreatedAt { get; set; }

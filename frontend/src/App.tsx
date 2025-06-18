@@ -21,6 +21,7 @@ interface ParticipantForm {
 
 function App() {
   const [topic, setTopic] = useState('');
+  const [rounds, setRounds] = useState(3);
   const [participants, setParticipants] = useState<ParticipantForm[]>([]);
   const [providers, setProviders] = useState<LLMProvider[]>([]);
   const [voices, setVoices] = useState<VoiceOption[]>([]);
@@ -124,6 +125,7 @@ function App() {
       
       const request: CreatePodcastRequest = {
         topic: topic.trim(),
+        rounds: rounds,
         participants: participants.map(p => ({
           name: p.name.trim(),
           persona: p.persona.trim(),
@@ -163,6 +165,7 @@ function App() {
 
   const clearForm = () => {
     setTopic('');
+    setRounds(3);
     setParticipants([]);
     setCopiedFromPodcast(null);
   };
@@ -187,6 +190,7 @@ function App() {
       });
       
       setParticipants(copiedParticipants);
+      setRounds(sourcePodcast.rounds);
       setCopiedFromPodcast(sourcePodcast.topic);
       
       // Clear any existing topic to encourage user to enter a new one
@@ -277,17 +281,35 @@ function App() {
                 {/* Topic Input */}
                 <div className="card">
                   <div className="card-header">
-                    <h2 className="font-semibold text-xl">Podcast Topic</h2>
+                    <h2 className="font-semibold text-xl">Podcast Configuration</h2>
                   </div>
-                  <div className="form-group">
-                    <label className="label">What would you like the podcast to discuss?</label>
-                    <textarea
-                      className="textarea"
-                      rows={3}
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      placeholder="e.g., The future of artificial intelligence in healthcare, The impact of remote work on productivity, etc."
-                    />
+                  <div className="space-y-4">
+                    <div className="form-group">
+                      <label className="label">What would you like the podcast to discuss?</label>
+                      <textarea
+                        className="textarea"
+                        rows={3}
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        placeholder="e.g., The future of artificial intelligence in healthcare, The impact of remote work on productivity, etc."
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="label">Number of Conversation Rounds</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          className="w-24 input"
+                          min="1"
+                          max="10"
+                          value={rounds}
+                          onChange={(e) => setRounds(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
+                        />
+                        <span className="text-gray-600 text-sm">
+                          Each round includes all participants speaking once
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -481,6 +503,11 @@ function App() {
                       onClick={() => loadPodcast(podcast.id)}
                     >
                       <h4 className="font-medium text-sm truncate">{podcast.topic}</h4>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-gray-500 text-xs">
+                          {podcast.rounds} rounds • {podcast.participants.length} participants
+                        </span>
+                      </div>
                       <div className="flex justify-between items-center mt-2">
                         <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(podcast.status)}`}>
                           {getStatusText(podcast.status)}
@@ -528,6 +555,9 @@ function App() {
                 </div>
                 <div>
                   <strong>Host:</strong> The host introduces the topic and guides the conversation.
+                </div>
+                <div>
+                  <strong>Rounds:</strong> Each round includes all participants speaking once. More rounds = longer podcast.
                 </div>
                 <div>
                   <strong>Copy Settings:</strong> Use "Copy Settings" from recent podcasts to reuse participant configurations.
