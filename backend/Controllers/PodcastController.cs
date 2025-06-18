@@ -25,6 +25,7 @@ public class PodcastController : ControllerBase
         {
             Id = s.Id,
             Topic = s.Topic,
+            Rounds = s.Rounds,
             Status = s.Status,
             CreatedAt = s.CreatedAt,
             CompletedAt = s.CompletedAt,
@@ -54,6 +55,7 @@ public class PodcastController : ControllerBase
         {
             Id = session.Id,
             Topic = session.Topic,
+            Rounds = session.Rounds,
             Status = session.Status,
             CreatedAt = session.CreatedAt,
             CompletedAt = session.CompletedAt,
@@ -93,6 +95,7 @@ public class PodcastController : ControllerBase
             {
                 Id = session.Id,
                 Topic = session.Topic,
+                Rounds = session.Rounds,
                 Status = session.Status,
                 CreatedAt = session.CreatedAt,
                 Participants = session.Participants.Select(p => new ParticipantResponse
@@ -125,6 +128,7 @@ public class PodcastController : ControllerBase
             {
                 Id = session.Id,
                 Topic = session.Topic,
+                Rounds = session.Rounds,
                 Status = session.Status,
                 CreatedAt = session.CreatedAt,
                 CompletedAt = session.CompletedAt,

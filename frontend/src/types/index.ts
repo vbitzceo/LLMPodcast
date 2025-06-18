@@ -37,6 +37,7 @@ export interface ParticipantRequest {
 export interface CreatePodcastRequest {
   topic: string;
   participants: ParticipantRequest[];
+  rounds: number;
 }
 
 export interface CreateLLMProviderRequest {
@@ -51,6 +52,7 @@ export interface CreateLLMProviderRequest {
 export interface PodcastSession {
   id: number;
   topic: string;
+  rounds: number;
   participants: ParticipantResponse[];
   messages: PodcastMessage[];
   createdAt: string;
