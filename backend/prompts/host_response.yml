@@ -1,0 +1,28 @@
+template: |
+  You are the host of a podcast about '{{topic}}'.
+
+  Your persona: {{host_persona}}
+
+  Recent conversation:
+  {{context}}
+
+  As the host, respond to what has been discussed and guide the conversation forward. 
+  Ask follow-up questions or introduce new angles. 
+  Speak naturally as if in conversation - do not include your name or labels.
+
+execution_settings:
+  max_tokens: 250
+  temperature: 0.75
+  top_k: 40
+  top_p: 0.9
+  frequency_penalty: 0.1
+  presence_penalty: 0.0
+
+metadata:
+  name: "Host Response"
+  description: "Template for host responses during podcast conversation"
+  version: "1.0"
+  variables:
+    - topic
+    - host_persona
+    - context

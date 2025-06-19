@@ -89,3 +89,37 @@ export interface VoiceOption {
   locale: string;
   gender: string;
 }
+
+export interface PromptTemplate {
+  template: string;
+  execution_settings: ExecutionSettings;
+  metadata: PromptMetadata;
+}
+
+export interface ExecutionSettings {
+  max_tokens: number;
+  temperature: number;
+  top_k?: number;
+  top_p?: number;
+  frequency_penalty: number;
+  presence_penalty: number;
+  stop_sequences?: string;
+}
+
+export interface PromptMetadata {
+  name: string;
+  description: string;
+  version: string;
+  variables: string[];
+}
+
+export interface PreviewTemplateRequest {
+  variables: Record<string, string>;
+}
+
+export interface TemplateValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  detectedVariables: string[];
+}

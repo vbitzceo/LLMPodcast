@@ -10,6 +10,7 @@ namespace LLMPodcastAPI.Services;
 public interface ILLMProviderService
 {
     Task<string> GenerateResponseAsync(LLMProvider provider, string prompt, string persona);
+    Task<string> GenerateResponseAsync(LLMProvider provider, string prompt, string persona, ExecutionSettings? settings);
 }
 
 public class LLMProviderService : ILLMProviderService
@@ -44,7 +45,28 @@ public class LLMProviderService : ILLMProviderService
         }
     }
 
-    private async Task<string> GenerateOpenAIResponseAsync(LLMProvider provider, string prompt, string persona)
+    public async Task<string> GenerateResponseAsync(LLMProvider provider, string prompt, string persona, ExecutionSettings? settings)
+    {
+        try
+        {
+            return provider.Type switch
+            {
+                LLMProviderType.OpenAI => await GenerateOpenAIResponseAsync(provider, prompt, persona, settings),
+                LLMProviderType.AzureOpenAI => await GenerateAzureOpenAIResponseAsync(provider, prompt, persona, settings),
+                LLMProviderType.LMStudio => await GenerateLMStudioResponseAsync(provider, prompt, persona, settings),
+                LLMProviderType.Ollama => await GenerateOllamaResponseAsync(provider, prompt, persona, settings),
+                _ => throw new NotSupportedException($"Provider type {provider.Type} is not supported")
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating response from {ProviderType} provider {ProviderName}", 
+                provider.Type, provider.Name);
+            return "I apologize, but I'm having trouble generating a response right now.";
+        }
+    }
+
+    private async Task<string> GenerateOpenAIResponseAsync(LLMProvider provider, string prompt, string persona, ExecutionSettings? settings = null)
     {
         if (string.IsNullOrEmpty(provider.ApiKey))
             throw new InvalidOperationException("OpenAI API key is required");
@@ -61,11 +83,29 @@ public class LLMProviderService : ILLMProviderService
                            "Respond naturally and conversationally, as if you're speaking in a podcast. " +
                            "Keep responses concise but engaging, typically 2-4 sentences.";
         
-        var result = await kernel.InvokePromptAsync($"{systemMessage}\n\nUser: {prompt}");
+        // Create execution settings
+        var executionSettings = new OpenAIPromptExecutionSettings();
+        if (settings != null)
+        {
+            executionSettings.MaxTokens = settings.MaxTokens;
+            executionSettings.Temperature = (float)settings.Temperature;
+            if (settings.TopP.HasValue) executionSettings.TopP = (float)settings.TopP.Value;
+            executionSettings.FrequencyPenalty = (float)settings.FrequencyPenalty;
+            executionSettings.PresencePenalty = (float)settings.PresencePenalty;
+        }
+        else
+        {
+            // Default settings
+            executionSettings.MaxTokens = 500;
+            executionSettings.Temperature = 0.7f;
+        }
+        
+        var result = await kernel.InvokePromptAsync($"{systemMessage}\n\nUser: {prompt}", 
+            new KernelArguments(executionSettings));
         return result.GetValue<string>() ?? "I'm not sure how to respond to that.";
     }
 
-    private async Task<string> GenerateAzureOpenAIResponseAsync(LLMProvider provider, string prompt, string persona)
+    private async Task<string> GenerateAzureOpenAIResponseAsync(LLMProvider provider, string prompt, string persona, ExecutionSettings? settings = null)
     {
         if (string.IsNullOrEmpty(provider.ApiKey) || string.IsNullOrEmpty(provider.Endpoint))
             throw new InvalidOperationException("Azure OpenAI API key and endpoint are required");
@@ -83,11 +123,29 @@ public class LLMProviderService : ILLMProviderService
                            "Respond naturally and conversationally, as if you're speaking in a podcast. " +
                            "Keep responses concise but engaging, typically 2-4 sentences. Don't start with lables like 'Me:' or 'I:', etc.";
         
-        var result = await kernel.InvokePromptAsync($"{systemMessage}\n\nUser: {prompt}");
+        // Create execution settings
+        var executionSettings = new OpenAIPromptExecutionSettings();
+        if (settings != null)
+        {
+            executionSettings.MaxTokens = settings.MaxTokens;
+            executionSettings.Temperature = (float)settings.Temperature;
+            if (settings.TopP.HasValue) executionSettings.TopP = (float)settings.TopP.Value;
+            executionSettings.FrequencyPenalty = (float)settings.FrequencyPenalty;
+            executionSettings.PresencePenalty = (float)settings.PresencePenalty;
+        }
+        else
+        {
+            // Default settings
+            executionSettings.MaxTokens = 500;
+            executionSettings.Temperature = 0.7f;
+        }
+        
+        var result = await kernel.InvokePromptAsync($"{systemMessage}\n\nUser: {prompt}", 
+            new KernelArguments(executionSettings));
         return result.GetValue<string>() ?? "I'm not sure how to respond to that.";
     }
 
-    private async Task<string> GenerateLMStudioResponseAsync(LLMProvider provider, string prompt, string persona)
+    private async Task<string> GenerateLMStudioResponseAsync(LLMProvider provider, string prompt, string persona, ExecutionSettings? settings = null)
     {
         if (string.IsNullOrEmpty(provider.Endpoint))
             throw new InvalidOperationException("LM Studio endpoint is required");
@@ -104,8 +162,11 @@ public class LLMProviderService : ILLMProviderService
                                                "Keep responses concise but engaging, typically 2-4 sentences." },
                 new { role = "user", content = prompt }
             },
-            temperature = 0.7,
-            max_tokens = 150
+            temperature = settings?.Temperature ?? 0.7,
+            max_tokens = settings?.MaxTokens ?? 150,
+            top_p = settings?.TopP,
+            frequency_penalty = settings?.FrequencyPenalty ?? 0.0,
+            presence_penalty = settings?.PresencePenalty ?? 0.0
         };
 
         var json = JsonSerializer.Serialize(requestBody);
@@ -123,7 +184,7 @@ public class LLMProviderService : ILLMProviderService
             .GetString() ?? "I'm not sure how to respond to that.";
     }
 
-    private async Task<string> GenerateOllamaResponseAsync(LLMProvider provider, string prompt, string persona)
+    private async Task<string> GenerateOllamaResponseAsync(LLMProvider provider, string prompt, string persona, ExecutionSettings? settings = null)
     {
         if (string.IsNullOrEmpty(provider.Endpoint))
             throw new InvalidOperationException("Ollama endpoint is required");
@@ -141,8 +202,11 @@ public class LLMProviderService : ILLMProviderService
             stream = false,
             options = new
             {
-                temperature = 0.7,
-                num_predict = 150
+                temperature = settings?.Temperature ?? 0.7,
+                num_predict = settings?.MaxTokens ?? 150,
+                top_p = settings?.TopP,
+                frequency_penalty = settings?.FrequencyPenalty,
+                presence_penalty = settings?.PresencePenalty
             }
         };
 

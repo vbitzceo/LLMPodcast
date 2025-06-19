@@ -29,6 +29,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<ILLMProviderService, LLMProviderService>();
 builder.Services.AddScoped<IPodcastService, PodcastService>();
 builder.Services.AddScoped<ISpeechService, SpeechService>();
+builder.Services.AddScoped<IPromptService, PromptService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

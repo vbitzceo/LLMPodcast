@@ -75,3 +75,16 @@ public class VoiceOption
     public string Locale { get; set; } = string.Empty;
     public string Gender { get; set; } = string.Empty;
 }
+
+public class PreviewTemplateRequest
+{
+    public Dictionary<string, string> Variables { get; set; } = new();
+}
+
+public class TemplateValidationResult
+{
+    public bool IsValid { get; set; }
+    public List<string> Errors { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
+    public List<string> DetectedVariables { get; set; } = new();
+}
