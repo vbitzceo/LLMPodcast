@@ -10,6 +10,7 @@ public interface IPodcastService
     Task<PodcastSession?> GetPodcastSessionAsync(int id);
     Task<List<PodcastSession>> GetPodcastSessionsAsync();
     Task<PodcastSession> GeneratePodcastAsync(int sessionId);
+    Task<bool> DeletePodcastSessionAsync(int id);
 }
 
 public class PodcastService : IPodcastService
@@ -264,5 +265,48 @@ public class PodcastService : IPodcastService
         }
 
         return cleanedResponse;
+    }
+
+    public async Task<bool> DeletePodcastSessionAsync(int id)
+    {
+        try
+        {
+            var session = await _context.PodcastSessions
+                .Include(s => s.Messages)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (session == null)
+                return false;
+
+            // Delete associated audio files
+            foreach (var message in session.Messages.Where(m => !string.IsNullOrEmpty(m.AudioUrl)))
+            {
+                try
+                {
+                    var audioPath = Path.Combine("wwwroot", message.AudioUrl!.TrimStart('/'));
+                    if (File.Exists(audioPath))
+                    {
+                        File.Delete(audioPath);
+                        _logger.LogInformation("Deleted audio file: {AudioPath}", audioPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete audio file for message {MessageId}", message.Id);
+                }
+            }
+
+            // Delete the podcast session (cascade delete will handle messages and participants)
+            _context.PodcastSessions.Remove(session);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Deleted podcast session {SessionId}", id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting podcast session {SessionId}", id);
+            return false;
+        }
     }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw, Copy } from 'lucide-react';
+import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw, Copy, Library } from 'lucide-react';
 import { 
   LLMProvider, 
   VoiceOption, 
@@ -10,6 +10,7 @@ import {
 import { llmProviderService, speechService, podcastService } from './services/api';
 import SettingsModal from './components/SettingsModal';
 import PodcastPlayer from './components/PodcastPlayer';
+import PodcastLibrary from './components/PodcastLibrary';
 
 interface ParticipantForm {
   name: string;
@@ -20,6 +21,7 @@ interface ParticipantForm {
 }
 
 function App() {
+  const [currentView, setCurrentView] = useState<'create' | 'library' | 'player'>('create');
   const [topic, setTopic] = useState('');
   const [rounds, setRounds] = useState(3);
   const [participants, setParticipants] = useState<ParticipantForm[]>([]);
@@ -158,9 +160,15 @@ function App() {
     try {
       const response = await podcastService.getById(id);
       setCurrentPodcast(response.data);
+      setCurrentView('player');
     } catch (error) {
       console.error('Failed to load podcast:', error);
     }
+  };
+
+  const handlePodcastSelect = (podcast: PodcastSession) => {
+    setCurrentPodcast(podcast);
+    setCurrentView('player');
   };
 
   const clearForm = () => {
@@ -250,33 +258,72 @@ function App() {
               Create AI-powered podcast conversations on any topic
             </p>
           </div>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="flex items-center gap-2 btn-secondary"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </button>
+          <div className="flex items-center gap-3">
+            {currentView !== 'library' && (
+              <button
+                onClick={() => setCurrentView('library')}
+                className="flex items-center gap-2 btn-secondary"
+              >
+                <Library className="w-4 h-4" />
+                Library
+              </button>
+            )}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center gap-2 btn-secondary"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </button>
+          </div>
         </div>
 
-        <div className="gap-8 grid grid-cols-1 lg:grid-cols-3">
-          {/* Main Form */}
-          <div className="space-y-6 lg:col-span-2">
-            {!currentPodcast ? (
-              <>
-                {/* Copied Settings Notification */}
-                {copiedFromPodcast && (
-                  <div className="bg-green-50 border-l-4 border-l-green-500 card">
-                    <div className="flex items-center gap-2 text-green-800">
-                      <Copy className="w-4 h-4" />
-                      <span className="font-medium">Settings copied from:</span>
-                      <span className="text-green-600">"{copiedFromPodcast}"</span>
-                    </div>
-                    <p className="mt-1 text-green-700 text-sm">
-                      All participant settings have been copied. Enter a new topic to create your podcast.
-                    </p>
+        {/* Main Content */}
+        {currentView === 'library' ? (
+          <PodcastLibrary 
+            onBack={() => setCurrentView('create')}
+            onPodcastSelect={handlePodcastSelect}
+          />
+        ) : currentView === 'player' && currentPodcast ? (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => {
+                  setCurrentPodcast(null);
+                  setCurrentView('create');
+                }}
+                className="btn-secondary"
+              >
+                ← Back to Create New
+              </button>
+              <button
+                onClick={() => copySettingsFromPodcast(currentPodcast.id)}
+                className="flex items-center gap-2 btn-secondary"
+                title="Copy these settings to create a new podcast"
+              >
+                <Copy className="w-4 h-4" />
+                Copy Settings
+              </button>
+            </div>
+            <PodcastPlayer session={currentPodcast} />
+          </div>
+        ) : (
+          <div className="gap-8 grid grid-cols-1 lg:grid-cols-3">
+            {/* Main Form */}
+            <div className="space-y-6 lg:col-span-2">
+              {/* Copied Settings Notification */}
+              {copiedFromPodcast && (
+                <div className="bg-green-50 border-l-4 border-l-green-500 card">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <Copy className="w-4 h-4" />
+                    <span className="font-medium">Settings copied from:</span>
+                    <span className="text-green-600">"{copiedFromPodcast}"</span>
                   </div>
-                )}
+                  <p className="mt-1 text-green-700 text-sm">
+                    All participant settings have been copied. Enter a new topic to create your podcast.
+                  </p>
+                </div>
+              )}
 
                 {/* Topic Input */}
                 <div className="card">
@@ -462,32 +509,10 @@ function App() {
                     )}
                   </div>
                 </div>
-              </>
-            ) : (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <button
-                    onClick={() => setCurrentPodcast(null)}
-                    className="btn-secondary"
-                  >
-                    ← Back to Create New
-                  </button>
-                  <button
-                    onClick={() => copySettingsFromPodcast(currentPodcast.id)}
-                    className="flex items-center gap-2 btn-secondary"
-                    title="Copy these settings to create a new podcast"
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copy Settings
-                  </button>
-                </div>
-                <PodcastPlayer session={currentPodcast} />
-              </div>
-            )}
-          </div>
+            </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+            {/* Sidebar */}
+            <div className="space-y-6">
             <div className="card">
               <div className="card-header">
                 <h3 className="font-semibold">Recent Podcasts</h3>
@@ -567,8 +592,9 @@ function App() {
                 </div>
               </div>
             </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <SettingsModal
