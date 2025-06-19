@@ -8,6 +8,7 @@ A full-stack application that creates AI-powered podcast conversations using mul
 - **Text-to-Speech**: Azure Speech Services integration with voice selection
 - **Interactive UI**: Modern React frontend with TypeScript and Tailwind CSS
 - **Conversation Management**: Create, save, and replay podcast conversations
+- **Podcast Library**: View, manage, and delete your podcast collection
 - **Configurable Rounds**: Set 1-10 conversation rounds to control podcast length
 - **Copy Settings**: Reuse participant configurations from previous podcasts
 - **Export Options**: Download conversation transcripts
@@ -138,6 +139,44 @@ Save time by reusing successful participant configurations:
 - Build podcast series with recurring characters
 - Save time on setup for similar content
 
+### Podcast Library
+
+Manage your entire podcast collection with the built-in library:
+
+**Accessing the Library:**
+- Click "Library" in the top-right corner to view all your podcasts
+
+**Library Features:**
+1. **Dashboard Overview**:
+   - View total podcast count, completed podcasts, and total messages
+   - Quick stats about your podcast collection
+
+2. **Podcast Management**:
+   - Browse all podcasts with detailed information:
+     - Topic, creation date, status, and participant count
+     - Number of rounds and conversation messages
+     - Participant names with host identification
+   - Filter by status (Created, In Progress, Completed, Failed)
+
+3. **Actions Available**:
+   - **Play**: Listen to or read completed podcasts
+   - **Copy Settings**: Reuse participant configurations from any podcast
+   - **Delete**: Permanently remove podcasts and their audio files
+     - Includes confirmation dialog to prevent accidental deletion
+     - Removes both database records and associated MP3 files
+
+4. **Navigation**:
+   - Seamless switching between Create, Library, and Player views
+   - Back buttons for easy navigation
+   - Integrated workflow with all existing features
+
+**Library Benefits:**
+- Complete podcast collection management
+- Easy access to previous conversations
+- Safe deletion with confirmation
+- Organize and review your content library
+- Quick access to successful podcast configurations
+
 ### Managing LLM Providers
 
 1. Click "Settings" in the top-right corner
@@ -199,6 +238,7 @@ LLM Podcast/
 - `GET /api/podcast/{id}` - Get podcast by ID
 - `POST /api/podcast` - Create podcast
 - `POST /api/podcast/{id}/generate` - Generate podcast content
+- `DELETE /api/podcast/{id}` - Delete podcast and associated audio files
 
 ### Speech
 - `GET /api/speech/voices` - Get available voices
