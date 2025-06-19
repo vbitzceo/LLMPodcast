@@ -18,17 +18,20 @@ public class PodcastService : IPodcastService
     private readonly PodcastContext _context;
     private readonly ILLMProviderService _llmService;
     private readonly ISpeechService _speechService;
+    private readonly IPromptService _promptService;
     private readonly ILogger<PodcastService> _logger;
 
     public PodcastService(
         PodcastContext context,
         ILLMProviderService llmService,
         ISpeechService speechService,
+        IPromptService promptService,
         ILogger<PodcastService> logger)
     {
         _context = context;
         _llmService = llmService;
         _speechService = speechService;
+        _promptService = promptService;
         _logger = logger;
     }
 
@@ -111,15 +114,11 @@ public class PodcastService : IPodcastService
                 ? string.Join(", ", participantNames.Take(participantNames.Count - 1)) + " and " + participantNames.Last()
                 : participantNames.FirstOrDefault() ?? "";
             
-            var introPrompt = $"You are the host of a podcast about '{session.Topic}'. " +
-                             $"Your persona: {host.Persona}. " +
-                             $"The other participants in today's discussion are: {participantNamesText}. " +
-                             "Introduce the topic and welcome the other participants by name. " +
-                             "Keep it brief and engaging. " +
-                             "Respond naturally as if speaking in a conversation - do not include your name or labels.";
+            var introPrompt = _promptService.GetHostIntroPrompt(session.Topic, host.Persona, participantNamesText);
+            var introSettings = _promptService.GetExecutionSettings("host_intro");
             
             var introResponse = await _llmService.GenerateResponseAsync(
-                host.LLMProvider, introPrompt, host.Persona);
+                host.LLMProvider, introPrompt, host.Persona, introSettings);
             
             await AddMessageAsync(session, host, introResponse, 1);
 
@@ -132,15 +131,11 @@ public class PodcastService : IPodcastService
                 foreach (var participant in participants)
                 {
                     var context = string.Join("\n\n", conversationHistory.TakeLast(4)); // Last 4 messages for context, no names
-                    var prompt = $"You are participating in a podcast discussion about '{session.Topic}'.\n\n" +
-                                $"Your persona: {participant.Persona}\n\n" +
-                                $"Recent conversation:\n{context}\n\n" +
-                                $"Respond naturally to continue the discussion. Share your perspective on the topic. " +
-                                $"Speak directly as if in conversation - do not include your name, labels, or prefixes like 'Me:', 'I think', etc. " +
-                                $"Just provide your natural response to what has been discussed.";
+                    var prompt = _promptService.GetParticipantResponsePrompt(session.Topic, participant.Persona, context);
+                    var participantSettings = _promptService.GetExecutionSettings("participant_response");
                     
                     var response = await _llmService.GenerateResponseAsync(
-                        participant.LLMProvider, prompt, participant.Persona);
+                        participant.LLMProvider, prompt, participant.Persona, participantSettings);
                     
                     // Clean up any accidental name labels or prefixes
                     var cleanResponse = CleanResponse(response, participant.Name);
@@ -153,15 +148,11 @@ public class PodcastService : IPodcastService
                 if (round < 2) // Don't have host respond after the last round
                 {
                     var context = string.Join("\n\n", conversationHistory.TakeLast(4));
-                    var hostPrompt = $"You are the host of a podcast about '{session.Topic}'.\n\n" +
-                                   $"Your persona: {host.Persona}\n\n" +
-                                   $"Recent conversation:\n{context}\n\n" +
-                                   $"As the host, respond to what has been discussed and guide the conversation forward. " +
-                                   $"Ask follow-up questions or introduce new angles. " +
-                                   $"Speak naturally as if in conversation - do not include your name or labels.";
+                    var hostPrompt = _promptService.GetHostResponsePrompt(session.Topic, host.Persona, context);
+                    var hostSettings = _promptService.GetExecutionSettings("host_response");
                     
                     var hostResponse = await _llmService.GenerateResponseAsync(
-                        host.LLMProvider, hostPrompt, host.Persona);
+                        host.LLMProvider, hostPrompt, host.Persona, hostSettings);
                     
                     // Clean up any accidental name labels or prefixes
                     var cleanHostResponse = CleanResponse(hostResponse, host.Name);
@@ -173,15 +164,11 @@ public class PodcastService : IPodcastService
 
             // Generate conclusion by host
             var finalContext = string.Join("\n\n", conversationHistory.TakeLast(6));
-            var conclusionPrompt = $"You are concluding a podcast discussion about '{session.Topic}'.\n\n" +
-                                 $"Your persona: {host.Persona}\n\n" +
-                                 $"The discussion covered:\n{finalContext}\n\n" +
-                                 $"As the host, provide a brief, engaging conclusion to wrap up this podcast episode. " +
-                                 $"Thank the participants and summarize key insights. " +
-                                 $"Speak directly as if in conversation - do not include your name or labels.";
+            var conclusionPrompt = _promptService.GetHostConclusionPrompt(session.Topic, host.Persona, finalContext);
+            var conclusionSettings = _promptService.GetExecutionSettings("host_conclusion");
             
             var conclusionResponse = await _llmService.GenerateResponseAsync(
-                host.LLMProvider, conclusionPrompt, host.Persona);
+                host.LLMProvider, conclusionPrompt, host.Persona, conclusionSettings);
             
             // Clean up any accidental name labels or prefixes
             var cleanConclusionResponse = CleanResponse(conclusionResponse, host.Name);

@@ -1,0 +1,28 @@
+template: |
+  You are participating in a podcast discussion about '{{topic}}'.
+
+  Your persona: {{participant_persona}}
+
+  Recent conversation:
+  {{context}}
+
+  Respond naturally to continue the discussion. Share your perspective on the topic. 
+  Speak directly as if in conversation - do not include your name, labels, or prefixes like 'Me:', 'I think', etc. 
+  Just provide your natural response to what has been discussed.
+
+execution_settings:
+  max_tokens: 300
+  temperature: 0.7
+  top_k: 40
+  top_p: 0.9
+  frequency_penalty: 0.1
+  presence_penalty: 0.0
+
+metadata:
+  name: "Participant Response"
+  description: "Template for participant responses during podcast conversation"
+  version: "1.0"
+  variables:
+    - topic
+    - participant_persona
+    - context

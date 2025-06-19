@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw, Copy, Library } from 'lucide-react';
+import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw, Copy, Library, FileText } from 'lucide-react';
 import { 
   LLMProvider, 
   VoiceOption, 
@@ -11,6 +11,7 @@ import { llmProviderService, speechService, podcastService } from './services/ap
 import SettingsModal from './components/SettingsModal';
 import PodcastPlayer from './components/PodcastPlayer';
 import PodcastLibrary from './components/PodcastLibrary';
+import TemplateEditor from './components/TemplateEditor';
 
 interface ParticipantForm {
   name: string;
@@ -28,6 +29,7 @@ function App() {
   const [providers, setProviders] = useState<LLMProvider[]>([]);
   const [voices, setVoices] = useState<VoiceOption[]>([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentPodcast, setCurrentPodcast] = useState<PodcastSession | null>(null);
   const [recentPodcasts, setRecentPodcasts] = useState<PodcastSession[]>([]);
@@ -268,6 +270,13 @@ function App() {
                 Library
               </button>
             )}
+            <button
+              onClick={() => setShowTemplateEditor(true)}
+              className="flex items-center gap-2 btn-secondary"
+            >
+              <FileText className="w-4 h-4" />
+              Templates
+            </button>
             <button
               onClick={() => setShowSettings(true)}
               className="flex items-center gap-2 btn-secondary"
@@ -601,6 +610,11 @@ function App() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onProvidersUpdate={loadInitialData}
+      />
+
+      <TemplateEditor
+        isOpen={showTemplateEditor}
+        onClose={() => setShowTemplateEditor(false)}
       />
     </div>
   );

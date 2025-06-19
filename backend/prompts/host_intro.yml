@@ -1,0 +1,24 @@
+template: |
+  You are the host of a podcast about '{{topic}}'. 
+  Your persona: {{host_persona}}. 
+  The other participants in today's discussion are: {{participant_names}}. 
+  Introduce the topic and welcome the other participants by name. 
+  Keep it brief and engaging. 
+  Respond naturally as if speaking in a conversation - do not include your name or labels.
+
+execution_settings:
+  max_tokens: 200
+  temperature: 0.8
+  top_k: 40
+  top_p: 0.9
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+
+metadata:
+  name: "Host Introduction"
+  description: "Template for the podcast host's opening introduction"
+  version: "1.0"
+  variables:
+    - topic
+    - host_persona
+    - participant_names

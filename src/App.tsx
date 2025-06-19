@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw } from 'lucide-react';
+import { Settings, Plus, Trash2, Mic, Users, Play, RefreshCw, FileText } from 'lucide-react';
 import { 
   LLMProvider, 
   VoiceOption, 
@@ -10,6 +10,7 @@ import {
 import { llmProviderService, speechService, podcastService } from './services/api';
 import SettingsModal from './components/SettingsModal';
 import PodcastPlayer from './components/PodcastPlayer';
+import TemplateEditor from './components/TemplateEditor';
 
 interface ParticipantForm {
   name: string;
@@ -25,6 +26,7 @@ function App() {
   const [providers, setProviders] = useState<LLMProvider[]>([]);
   const [voices, setVoices] = useState<VoiceOption[]>([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentPodcast, setCurrentPodcast] = useState<PodcastSession | null>(null);
   const [recentPodcasts, setRecentPodcasts] = useState<PodcastSession[]>([]);
@@ -205,13 +207,22 @@ function App() {
               Create AI-powered podcast conversations on any topic
             </p>
           </div>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="flex items-center gap-2 btn-secondary"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowTemplateEditor(true)}
+              className="flex items-center gap-2 btn-secondary"
+            >
+              <FileText className="w-4 h-4" />
+              Templates
+            </button>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center gap-2 btn-secondary"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </button>
+          </div>
         </div>
 
         <div className="gap-8 grid grid-cols-1 lg:grid-cols-3">
@@ -448,6 +459,11 @@ function App() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onProvidersUpdate={loadInitialData}
+      />
+
+      <TemplateEditor
+        isOpen={showTemplateEditor}
+        onClose={() => setShowTemplateEditor(false)}
       />
     </div>
   );
