@@ -203,20 +203,19 @@ const PodcastPlayer = ({ session }: PodcastPlayerProps) => {
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="text-gray-600 text-sm">Speed:</span>
-              {[0.75, 1, 1.25, 1.5, 2].map((speed) => (
-                <button
-                  key={speed}
-                  onClick={() => handleSpeedChange(speed)}
-                  className={`px-2 py-1 text-sm rounded ${
-                    playbackSpeed === speed
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {speed}x
-                </button>
-              ))}
+              <label htmlFor="playback-speed" className="text-gray-600 text-sm">Speed:</label>
+              <select
+                id="playback-speed"
+                value={playbackSpeed}
+                onChange={(e) => handleSpeedChange(Number(e.target.value))}
+                className="bg-white px-2 py-1 border border-gray-300 focus:border-primary-500 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700 text-sm"
+              >
+                <option value={0.75}>0.75x</option>
+                <option value={1}>1x</option>
+                <option value={1.25}>1.25x</option>
+                <option value={1.5}>1.5x</option>
+                <option value={2}>2x</option>
+              </select>
             </div>
 
             {isPlaying && (
