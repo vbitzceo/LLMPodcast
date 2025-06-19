@@ -28,6 +28,7 @@ export const podcastService = {
   getById: (id: number) => api.get<PodcastSession>(`/podcast/${id}`),
   create: (data: CreatePodcastRequest) => api.post<PodcastSession>('/podcast', data),
   generate: (id: number) => api.post<PodcastSession>(`/podcast/${id}/generate`),
+  delete: (id: number) => api.delete(`/podcast/${id}`),
 };
 
 // Speech API

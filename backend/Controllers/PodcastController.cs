@@ -162,4 +162,24 @@ public class PodcastController : ControllerBase
             return BadRequest("Failed to generate podcast: " + ex.Message);
         }
     }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeletePodcast(int id)
+    {
+        try
+        {
+            var result = await _podcastService.DeletePodcastSessionAsync(id);
+            if (!result)
+            {
+                return NotFound($"Podcast with ID {id} not found");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting podcast {PodcastId}", id);
+            return BadRequest("Failed to delete podcast: " + ex.Message);
+        }
+    }
 }
